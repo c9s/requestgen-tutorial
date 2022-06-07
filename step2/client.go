@@ -42,7 +42,6 @@ func NewClient(baseURL string) *RestClient {
 		},
 	}
 
-	// client.AccountService = &AccountService{client: client}
 	return client
 }
 
