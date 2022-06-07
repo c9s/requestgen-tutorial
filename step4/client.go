@@ -12,16 +12,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/c9s/bbgo/pkg/types"
 	"github.com/c9s/requestgen"
 	"github.com/pkg/errors"
 )
-
-type APIResponse struct {
-	Code    string          `json:"code"`
-	Message string          `json:"msg"`
-	Data    json.RawMessage `json:"data"`
-}
 
 const defaultHTTPTimeout = time.Second * 15
 const RestBaseURL = "https://api.binance.com"
@@ -56,7 +49,6 @@ func NewClient(baseURL string) *RestClient {
 		},
 	}
 
-	// client.AccountService = &AccountService{client: client}
 	return client
 }
 
@@ -66,30 +58,17 @@ func (c *RestClient) Auth(key, secret string) {
 }
 
 func (c *RestClient) SetTimeOffsetFromServer(ctx context.Context) error {
-	req, err := c.NewRequest(ctx, "GET", "/api/v3/time", nil, nil)
+	req := &GetTimeOffsetRequest{client: c}
+	resp, err := req.Do(ctx)
 	if err != nil {
 		return err
 	}
 
-	resp, err := c.SendRequest(req)
-	if err != nil {
-		return err
-	}
-
-	var a struct {
-		ServerTime types.MillisecondTimestamp `json:"serverTime"`
-	}
-
-	err = resp.DecodeJSON(&a)
-	if err != nil {
-		return err
-	}
-
-	c.timeOffset = currentTimestamp() - a.ServerTime.Time().UnixMilli()
+	c.timeOffset = currentTimestamp() - resp.ServerTime.Time().UnixMilli()
 	return nil
 }
 
-// newAuthenticatedRequest creates new http request for authenticated routes.
+// NewAuthenticatedRequest creates new http request for authenticated routes.
 func (c *RestClient) NewAuthenticatedRequest(ctx context.Context, method, refURL string, params url.Values, payload interface{}) (*http.Request, error) {
 	if len(c.Key) == 0 {
 		return nil, errors.New("empty api key")
@@ -166,28 +145,21 @@ func sign(secret, payload string) string {
 }
 
 func currentTimestamp() int64 {
-	return FormatTimestamp(time.Now())
-}
-
-// FormatTimestamp formats a time into Unix timestamp in milliseconds, as requested by Binance.
-func FormatTimestamp(t time.Time) int64 {
-	return t.UnixNano() / int64(time.Millisecond)
+	return time.Now().UnixMilli()
 }
 
 func castPayload(payload interface{}) ([]byte, error) {
-	if payload != nil {
-		switch v := payload.(type) {
-		case string:
-			return []byte(v), nil
-
-		case []byte:
-			return v, nil
-
-		default:
-			body, err := json.Marshal(v)
-			return body, err
-		}
+	if payload == nil {
+		return nil, nil
 	}
 
-	return nil, nil
+	switch v := payload.(type) {
+	case string:
+		return []byte(v), nil
+
+	case []byte:
+		return v, nil
+	}
+
+	return json.Marshal(payload)
 }

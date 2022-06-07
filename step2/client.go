@@ -26,10 +26,6 @@ type RestClient struct {
 }
 
 func NewClient(baseURL string) *RestClient {
-	if len(baseURL) == 0 {
-		baseURL = RestBaseURL
-	}
-
 	u, err := url.Parse(baseURL)
 	if err != nil {
 		panic(err)
