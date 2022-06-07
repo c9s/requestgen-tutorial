@@ -16,7 +16,7 @@ func getTestClientOrSkip(t *testing.T) *RestClient {
 		return nil
 	}
 
-	client := NewClient("")
+	client := NewClient(RestBaseURL)
 	client.Auth(key, secret)
 	return client
 }
