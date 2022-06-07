@@ -1,6 +1,6 @@
 # Requestgen Tutorial
 
-This tutorial teaches you now to implement a Binance API client with [requestgen](/c9s/requestgen).
+This tutorial teaches you now to implement a Binance API client with [requestgen](https://github.com/c9s/requestgen).
 
 With requestgen, you can implement an API client in just few minutes!
 
